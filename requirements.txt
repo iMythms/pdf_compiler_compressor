@@ -1,15 +1,4 @@
-from pdf2image import convert_from_path
-import pikepdf
-import io
-
-def compress_pdf(input_path, output_path, level="medium"):
-    # Convert PDF pages to images with specified DPI based on compression level
-    images = convert_from_path(input_path, dpi=200 if level == "low" else 150 if level == "medium" else 100)
-    pdf_bytes = io.BytesIO()
-    images[0].save(pdf_bytes, format='PDF', save_all=True, append_images=images[1:])
-    pdf_bytes.seek(0)
-
-    # Open the PDF with pikepdf and save it with compression
-    pdf = pikepdf.open(pdf_bytes)
-    pdf.save(output_path, compression=pikepdf.CompressionLevel.default)
-    pdf.close()
+streamlit
+PyPDF2
+pdf2image
+reportlab
