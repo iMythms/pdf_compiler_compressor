@@ -1,14 +1,24 @@
+from pdf2image import convert_from_path
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.utils import ImageReader
 import streamlit as st
 import tempfile
 from PyPDF2 import PdfMerger
-import fitz  # PyMuPDF
 import os
 
 
-def compress_pdf(input_path, output_path):
-    doc = fitz.open(input_path)
-    doc.save(output_path, garbage=4, deflate=True, clean=True)
-    doc.close()
+def compress_pdf(input_path, output_path, level="medium"):
+    images = convert_from_path(
+        input_path, dpi=100 if level == "Low Quality" else 150 if level == "Medium Quality" else 200)
+    c = canvas.Canvas(output_path, pagesize=letter)
+
+    for img in images:
+        img_io = ImageReader(img)
+        c.drawImage(img_io, 0, 0, width=letter[0], height=letter[1])
+        c.showPage()
+
+    c.save()
 
 
 st.set_page_config(page_title="ONE PDF Wizard", layout="centered")
@@ -19,6 +29,12 @@ uploaded_files = st.file_uploader(
 
 if uploaded_files:
     st.info("Files ready. Click below to compile and compress.")
+    compression_level = st.radio(
+        "Select compression level:",
+        ["Low Quality", "Medium Quality", "High Quality"],
+        index=1,
+        horizontal=True
+    )
 
 if st.button("Compile"):
     if not uploaded_files:
@@ -38,7 +54,8 @@ if st.button("Compile"):
             merger.close()
 
         with st.spinner("Compressing PDF..."):
-            compress_pdf(merged_path, final_output_path)
+            compress_pdf(merged_path, final_output_path,
+                         level=compression_level)
 
         with open(final_output_path, "rb") as f:
             st.success("Done! Download your optimized PDF below.")
